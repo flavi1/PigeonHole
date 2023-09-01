@@ -1,12 +1,12 @@
 {
-    "name": "flavi1/PigeonHole",
+    "name": "flavi1/pigeonhole",
     "type": "library",
     "description": "A consistant and simple way to organize your classes, singletons, and other ressources. Can be used as a router.",
     "keywords": [
         "flavi1",
-        "PigeonHole"
+        "pigeonhole"
     ],
-    "homepage": "https://github.com/flavi1/PigeonHole",
+    "homepage": "https://github.com/flavi1/pigeonhole",
     "license": "MIT",
     "authors": [
         {
@@ -25,12 +25,12 @@
     },
     "autoload": {
         "psr-4": {
-            "flavi1\\PigeonHole\\": "src"
+            "flavi1\\pigeonhole\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "flavi1\\PigeonHole\\": "tests"
+            "flavi1\\pigeonhole\\": "tests"
         }
     },
     "scripts": {
