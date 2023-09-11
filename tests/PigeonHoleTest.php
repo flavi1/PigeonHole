@@ -3,6 +3,16 @@ namespace PigeonHole;
 
 use PHPUnit\Framework\TestCase;
 
+
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    // error was suppressed with the @-operator
+    if (0 === error_reporting()) {
+        return false;
+    }
+    
+    throw new \ErrorException($errstr, 0, $errno, $errfile, $errline);	// to catch Warnings (see https://github.com/sebastianbergmann/phpunit/issues/5062)
+});
+
 class testHelper extends PigeonHole
 {
 	
@@ -436,6 +446,26 @@ class PigeonHoleTest extends TestCase
     // EXCEPTIONS :
     // ============
     
+    
+    // See : https://github.com/sebastianbergmann/phpunit/issues/5062
+	protected function assertThrowableMessage(
+		string $message,
+		$callback,
+		$args
+	): void
+	{
+		$testDONE = false;
+		try {
+			$test = call_user_func_array($callback, $args);
+		} catch (\ErrorException $e) {
+			$this->assertEquals($message, $e->getMessage());
+			$testDONE = true;
+		}
+		if(!$testDONE)
+			$this->assertTrue(false, 'An Error must be throw.');	// SIC !
+}
+    
+    
     public function testSetSingletonException()
     {
         $this->expectException(\RuntimeException::class);
@@ -486,55 +516,12 @@ class PigeonHoleTest extends TestCase
         PigeonHole::generatePaths('example', [], 'path_type');
     }
     
-    
-/*
-    public function testAppendGlobalPathInvalidTypeException()
-    {
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Global Path example must be a string to be appended.');
-
-        // Appel à appendGlobalPath avec un type de chemin invalide
-        PigeonHole::appendGlobalPath('example', 123);
-    }
-
-    public function testPrependGlobalPathInvalidTypeException()
-    {
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Global Path example must be a string to be prepended.');
-
-        // Appel à prependGlobalPath avec un type de chemin invalide
-        PigeonHole::prependGlobalPath('example', 123);
-    }
-
-    public function testSetMatchTypesInvalidParameterException()
-    {
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('setMatchTypes parameter must be an array.');
-
-        // Appel à setMatchTypes avec un paramètre invalide
-        PigeonHole::setMatchTypes('invalid');
-    }
-
     public function testGeneratePathsNoPatternException()
     {
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Ressource type example has no pattern.');
+        $this->assertThrowableMessage('Warning : Ressource type example has no pattern.', ['\PigeonHole\PigeonHole', 'generatePaths'], ['example', [], 'path_type']);
 
         // Appel à generatePaths pour un type de ressource sans modèle de chemin
-        PigeonHole::generatePaths('example', [], 'path_type');
+        //PigeonHole::generatePaths('example', [], 'path_type');
     }
-
-    public function testGeneratePathsInvalidTransformerException()
-    {
-        PigeonHole::map('example', 'path_type', '%pattern%', 'non-callable');
-
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Transformer for ressource type example and path type path_type must be callable.');
-
-        // Appel à generatePaths avec un transformateur non-appelable
-        PigeonHole::generatePaths('example', [], 'path_type');
-    }
-*/
-
 
 }

@@ -85,16 +85,12 @@ class PigeonHole {
 	// $path string cette fois
 	public static function appendGlobalPath(string $name, string $path)
 	{
-		if(!is_string($path))
-			throw new \RuntimeException("Global Path {$name} must be a string to be appended.");
 		static::$globalPaths[$name][] = $path;
 	}
 	
 	// $path string cette fois
 	public static function prependGlobalPath(string $name, string $path)
 	{
-		if(!is_string($path))
-			throw new \RuntimeException("Global Path {$name} must be a string to be prepended.");
 		array_unshift(static::$globalPaths[$name], $path);
 	}
 	
@@ -173,7 +169,6 @@ class PigeonHole {
     public static function generatePaths($type, $ressourceParams, $pathType = null)
     {
 		if(!isset(static::$patterns[$type])) {
-			//throw new \RuntimeException("Ressource type {$type} has no pattern.");
 			\trigger_error("Warning : Ressource type {$type} has no pattern.", E_USER_WARNING);
 			return false;
 		}
@@ -318,6 +313,8 @@ class PigeonHole {
         return "`^$pattern$`u";
     }  
 }
+
+return;
 
 PigeonHole::setGlobalPath('root', '/var/www');
 PigeonHole::setGlobalPath('theme', ['/var/themes/extendable_theme', '/var/themes/child_theme']);
