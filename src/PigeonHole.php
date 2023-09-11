@@ -98,6 +98,11 @@ class PigeonHole {
 		array_unshift(static::$globalPaths[$name], $path);
 	}
 	
+	public static function getGlobalPath(string $name)
+	{
+		return static::$globalPaths[$name];
+	}
+	
 	public static function map(string $type, string $pathType, string $pattern, $tranform = null)
 	{
 		if($tranform and !is_callable($tranform))
@@ -152,11 +157,11 @@ class PigeonHole {
         }
         
 		if(is_string($globalPath)) {
-			return str_replace("%{$globalPathRef}%", $globalPath, $path);
+			$path = str_replace("%{$globalPathRef}%", $globalPath, $path);
 		}
 		
 		if(is_array($globalPath)) {
-			return array_map(
+			$path = array_map(
 				fn($globalPathItem): string => str_replace("%{$globalPathRef}%", $globalPathItem, $path),
 				$globalPath
 			);
@@ -167,8 +172,11 @@ class PigeonHole {
     
     public static function generatePaths($type, $ressourceParams, $pathType = null)
     {
-		if(!isset(static::$patterns[$type]))
-			throw new \RuntimeException("Ressource type {$type} has no pattern.");
+		if(!isset(static::$patterns[$type])) {
+			//throw new \RuntimeException("Ressource type {$type} has no pattern.");
+			\trigger_error("Warning : Ressource type {$type} has no pattern.", E_USER_WARNING);
+			return false;
+		}
 		if(!$pathType) {
 			$pathTypeList = [];
 			foreach(static::$patterns[$type] as $k => $v)
@@ -190,7 +198,7 @@ class PigeonHole {
 			$pathParams = $ressourceParams;
 		if(!$pathParams)
 			return false;
-		return static::patternToPath(static::$patterns[$type][$pathType], $pathParams);
+		return static::patternToPath(static::$patterns[$type][$pathType], $pathParams) ?? false;
 	}
 	
     /**
