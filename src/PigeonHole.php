@@ -200,12 +200,15 @@ class PigeonHole {
     {
         $pathParams = [];
 		
+		$useGP = false;
+		
 		// strip global paths
 		foreach(static::$globalPaths as $k => $gp_arr)
 			foreach($gp_arr as $gp)
-				if(strpos($path, $gp) !== false) {
-					//$path = substr($path, strlen("%{$k}%"));
-					$path = str_replace($gp, "%{$k}%", $path);
+				if(strpos($path, $gp) === 0) {	// start with a global path
+					//$path = str_replace($gp, "%{$k}%", $path);
+					$path = str_replace($gp, '', $path);
+					$useGP = ['%'.$k.'%', $gp];
 					break;
 				}
 
@@ -218,6 +221,12 @@ class PigeonHole {
 
 		foreach(static::$patterns as $ressourceType => $ressourcePatterns)
 			foreach ($ressourcePatterns as $pathType => $pattern) {
+				if($useGP and strpos($pattern, $useGP[0]) !== 0)	// Le globalPath doit être le même.
+					continue;
+				if($useGP) {
+					$pattern = str_replace($useGP[0], '', $pattern);
+				}
+					
 			//foreach ($ressourcePatterns as $pathType => $handler) {
 				//list($defaultParams, $pattern) = $handler;
 
@@ -257,8 +266,9 @@ class PigeonHole {
 							throw new \RuntimeException("Transformer for ressource type {$ressourceType} and path type {$pathType} must be callable.");
 						if(!empty($pathParams))
 							$opt = $pathParams;
-						else
-							$opt = $path;
+						else {
+							$opt = $useGP ? $useGP[1].$path : $path;
+						}
 						$ressourceParams = call_user_func(static::$transformers[$ressourceType][$pathType], $opt, self::RESSOURCE_PARAMS);
 					}
 					else

@@ -265,7 +265,11 @@ class PigeonHoleTest extends TestCase
 
     public function testResolveWithoutPathParameters()
     {
+		PigeonHole::setGlobalPath('root', '/root_path');
 		foreach([
+			'%root%/string/simple/comparaison.tpl' => '/root_path/string/simple/comparaison.tpl',
+			'%root%@\.(json|csv)$' => '/root_path/example.json',
+			'%root%*' => '/root_path/matched/path/example',
 			'/string/simple/comparaison.tpl' => '/string/simple/comparaison.tpl',
 			'@\.(json|csv)$' => 'example.json',
 			'*' => 'matched/path/example',
@@ -321,6 +325,7 @@ class PigeonHoleTest extends TestCase
         PigeonHole::setGlobalPath('root', '/var/www');
         PigeonHole::setGlobalPath('theme', '/var/themes/child_theme');
 
+        PigeonHole::map('page', 'theme_path', '%theme%/templates/[a:name].tpl');
         PigeonHole::map('page', 'src_path', '%root%/templates/[a:name].tpl');
 
         $path = '/var/www/templates/youpi.tpl';
