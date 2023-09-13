@@ -51,7 +51,7 @@ class testHelper extends PigeonHole
 		return isset(self::${$k});
 	}
 	
-	public function __get($k)
+	public function &__get($k)
 	{
 		return self::${$k};
 	}
@@ -263,8 +263,61 @@ class PigeonHoleTest extends TestCase
     }
 
 
+    public function testResolveWithoutPathParameters()
+    {
+		foreach([
+			'/string/simple/comparaison.tpl' => '/string/simple/comparaison.tpl',
+			'@\.(json|csv)$' => 'example.json',
+			'*' => 'matched/path/example',
+		] as $pattern => $path)
+		{
+			PigeonHole::map('page', 'src_path', $pattern, function($opt, $resolve) {
+				if($resolve) {
+					return ['name' => 'youpi',
+						'matched' => $opt
+					];
+				}
+				if($opt['name'] == 'youpi')
+					return '/string/simple/comparaison.tpl';
+			});
+
+			$result = PigeonHole::resolve($path);
+
+			// Vérifie que le résultat est correct
+			$expected = [
+				'type' => 'page',
+				'params' => [
+					'name' => 'youpi',
+					'matched' => $path
+				],
+				'path_type' => 'src_path'
+			];
+			$this->assertEquals($expected, $result);
+		}
+	}
+	
+    public function testResolveInvalidTransformerReturnTypeException()
+    {
+		$th = testHelper::getTestHelperInstance();
+		
+        PigeonHole::setGlobalPath('root', '/var/www');
+
+        PigeonHole::map('page', 'src_path', '%root%/templates/[a:name].tpl');
+		
+		$th->transformers['page'] = ['src_path' => 'not a callable'];
+		
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Transformer for ressource type page and path type src_path must be callable.');
+		
+		$path = '/var/www/templates/youpi.tpl';
+		
+        // Appel à generatePaths avec un transformateur non callable
+        $result = PigeonHole::resolve($path);
+    }
+	
     public function testResolveSrcPath()
     {
+        
         PigeonHole::setGlobalPath('root', '/var/www');
         PigeonHole::setGlobalPath('theme', '/var/themes/child_theme');
 
@@ -287,9 +340,23 @@ class PigeonHoleTest extends TestCase
     {
         PigeonHole::setGlobalPath('www', 'http://mydomain.com');
 
-        PigeonHole::map('page', 'url', '%www%/[a:name]');
+        PigeonHole::map('page', 'url', '%www%/[*:name]');
 
-        $path = 'http://mydomain.com/youpi';
+        $path = 'http://mydomain.com/youpi/';
+
+        $result = PigeonHole::resolve($path);
+
+        // Vérifie que le résultat est correct
+        $expected = [
+            'type' => 'page',
+            'params' => ['name' => 'youpi/'],
+            'path_type' => 'url'
+        ];
+        $this->assertEquals($expected, $result);
+
+		// Url with Query parameters
+
+        $path = 'http://mydomain.com/youpi?param=ok';
 
         $result = PigeonHole::resolve($path);
 
@@ -301,10 +368,58 @@ class PigeonHoleTest extends TestCase
         ];
         $this->assertEquals($expected, $result);
     }
+    
+    public function testResolveWithOptionnal()
+    {
+        PigeonHole::setGlobalPath('www', 'http://mydomain.com');
+
+        PigeonHole::map('page', 'url', '%www%/[a:name].[a:optionnal]?');
+        PigeonHole::map('page', 'url2', 'url2/[a:name]/[a:optionnal]?');
+
+        $path = 'http://mydomain.com/youpi.test';
+
+        $result = PigeonHole::resolve($path);
+
+        // Vérifie que le résultat est correct
+        $expected = [
+            'type' => 'page',
+            'params' => ['name' => 'youpi', 'optionnal' => 'test'],
+            'path_type' => 'url',
+        ];
+        $this->assertEquals($expected, $result);
+        
+        // Without
+        
+        $path = 'http://mydomain.com/youpi';
+
+        $result = PigeonHole::resolve($path);
+
+        // Vérifie que le résultat est correct
+        $expected = [
+            'type' => 'page',
+            'params' => ['name' => 'youpi'],
+            'path_type' => 'url',
+        ];
+        $this->assertEquals($expected, $result);
+        
+        // without for url2
+        
+        $path = 'url2/youpi/';
+
+        $result = PigeonHole::resolve($path);
+
+        // Vérifie que le résultat est correct
+        $expected = [
+            'type' => 'page',
+            'params' => ['name' => 'youpi'],
+            'path_type' => 'url2',
+        ];
+        $this->assertEquals($expected, $result);
+    }
 
     public function testResolveThemePath()
     {
-        PigeonHole::setGlobalPath('theme', '/var/themes/child_theme');
+        PigeonHole::setGlobalPath('theme', ['/var/themes/parent_theme', '/var/themes/child_theme']);
 
         PigeonHole::map('page', 'theme_path', '%theme%/[a:name].tpl');
 
@@ -350,6 +465,48 @@ class PigeonHoleTest extends TestCase
         $this->assertEquals($expected, $result);
     }
 	
+    public function testGeneratePathsOptionnalParams()
+    {
+        PigeonHole::setGlobalPath('root', '/var/www');
+        PigeonHole::setGlobalPath('theme', '/var/themes/child_theme');
+
+        PigeonHole::map('folder', 'folder_path', '%root%/folders/[a:name]/[a:optionnal]?');
+        PigeonHole::map('folder', 'folder_path2', '%root%/folders/[a:optionnal]?/[a:name]');
+
+        $type = 'folder';
+        $ressourceParams = ['name' => 'youpi'];
+        $pathType = 'folder_path';
+
+        $result = PigeonHole::generatePaths($type, $ressourceParams, $pathType);
+
+        // Without Option
+        $expected = ['/var/www/folders/youpi'];
+        $this->assertEquals($expected, $result);
+        
+        // With Option
+        $ressourceParams['optionnal'] = 'not_required';
+        $result = PigeonHole::generatePaths($type, $ressourceParams, $pathType);
+        
+        $expected = ['/var/www/folders/youpi/not_required'];
+        $this->assertEquals($expected, $result);
+        
+        // change order (folder_path2)
+		
+		$pathType = 'folder_path2';
+		
+        $ressourceParams['optionnal'] = 'not_required';
+        $result = PigeonHole::generatePaths($type, $ressourceParams, $pathType);
+        
+        $expected = ['/var/www/folders/not_required/youpi'];
+        $this->assertEquals($expected, $result);
+        
+        unset($ressourceParams['optionnal']);
+        $result = PigeonHole::generatePaths($type, $ressourceParams, $pathType);
+        
+        $expected = ['/var/www/folders//youpi'];
+        $this->assertEquals($expected, $result);
+    }
+	
     public function testGeneratePathsMultiples()
     {
 		PigeonHole::setGlobalPath('root', '/var/www');
@@ -376,26 +533,45 @@ class PigeonHoleTest extends TestCase
         $this->assertEquals($expected, $result);
     }
     
-    protected function initTransformer()
+    protected function initTransformer($valid = true)
     {
+		
+		
 		PigeonHole::setGlobalPath('www', 'http://mydomain.com');
 		
-		$routeHandler = function($opt, $resolve) {
-			if($resolve) {
-				if( $opt['category'] == 'valid' and $opt['title'] == 'exists' )
+		if(!$valid)
+		{
+			$th = testHelper::getTestHelperInstance();
+			
+			$th->patterns['article']['view'] = '%www%/[a:category]/[a:title]/view';
+			$th->transformers['article']['view'] = 'absurde';
+			
+			$th->patterns['article']['edit'] = '%www%/[a:category]/[a:title]/edit';
+			$th->patterns['article']['edit'] = 'absurde';
+			
+			$th->patterns['article']['remove'] = '%www%/[a:category]/[a:title]/remove';
+			$th->patterns['article']['remove'] = 'absurde';
+			return;
+		}
+		if(!is_callable($valid))
+			$routeHandler = function($opt, $resolve) {
+				if($resolve) {
+					if( $opt['category'] == 'valid' and $opt['title'] == 'exists' )
+						return [
+							'id' => 3,
+							'category_id' => 1
+						];
+				} elseif( $opt['id'] == 3 and $opt['category_id'] == 1 ) {
 					return [
-						'id' => 3,
-						'category_id' => 1
+						'category' => 'valid',
+						'title' => 'exists'
 					];
-			} elseif( $opt['id'] == 3 and $opt['category_id'] == 1 ) {
-				return [
-					'category' => 'valid',
-					'title' => 'exists'
-				];
-			}
-			return false;
-		};
-
+				}
+				return false;
+			};
+		else
+			$routeHandler = $valid;
+		
 		PigeonHole::map('article', 'view', '%www%/[a:category]/[a:title]/view', $routeHandler);
 		PigeonHole::map('article', 'edit', '%www%/[a:category]/[a:title]/edit', $routeHandler);
 		PigeonHole::map('article', 'remove', '%www%/[a:category]/[a:title]/remove', $routeHandler);
@@ -441,6 +617,24 @@ class PigeonHoleTest extends TestCase
 
         // Vérifiez si le résultat correspond à ce qui est attendu
         $this->assertEquals($expectedPaths, $result);
+    }
+
+    public function testGeneratePathsWithoutPathParameters() {
+		$this->initTransformer(function($opt, $resolve) {
+			return false;
+		});
+		
+        // Configurez les données de test pour la génération de chemins
+        $routeData = [
+            'id' => 3,
+            'category_id' => 1,
+        ];
+
+        // Appelez la fonction generatePaths avec les données de route
+        $result = PigeonHole::generatePaths('article', $routeData, 'view');
+
+        // Vérifiez si le résultat correspond à ce qui est attendu
+        $this->assertFalse($result);
     }
     
     // EXCEPTIONS :
@@ -522,6 +716,24 @@ class PigeonHoleTest extends TestCase
 
         // Appel à generatePaths pour un type de ressource sans modèle de chemin
         //PigeonHole::generatePaths('example', [], 'path_type');
+    }
+    
+    public function testGeneratePathsWithInvalidTranformer() {
+		$this->initTransformer(false);
+		
+        // Configurez les données de test pour la génération de chemins
+        $routeData = [
+            'id' => 3,
+            'category_id' => 1,
+        ];
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Transformer for ressource type article and path type view must be callable.');
+
+        // Appelez la fonction generatePaths avec les données de route
+        $result = PigeonHole::generatePaths('article', $routeData, 'view');
+
+
     }
 
 }

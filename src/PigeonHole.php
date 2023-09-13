@@ -151,10 +151,6 @@ class PigeonHole {
                 }
             }
         }
-        
-		if(is_string($globalPath)) {
-			$path = str_replace("%{$globalPathRef}%", $globalPath, $path);
-		}
 		
 		if(is_array($globalPath)) {
 			$path = array_map(
@@ -169,8 +165,7 @@ class PigeonHole {
     public static function generatePaths($type, $ressourceParams, $pathType = null)
     {
 		if(!isset(static::$patterns[$type])) {
-			\trigger_error("Warning : Ressource type {$type} has no pattern.", E_USER_WARNING);
-			return false;
+			return (\trigger_error("Warning : Ressource type {$type} has no pattern.", E_USER_WARNING) and false);
 		}
 		if(!$pathType) {
 			$pathTypeList = [];
@@ -259,8 +254,12 @@ class PigeonHole {
 					// Transform $pathParams to $ressourceParams
 					if(isset(static::$transformers[$ressourceType][$pathType])) {
 						if(!is_callable(static::$transformers[$ressourceType][$pathType]))
-							throw new \RuntimeException("Transformer for ressource type {$type} and path type {$pathType} must be callable.");
-						$ressourceParams = call_user_func(static::$transformers[$ressourceType][$pathType], $pathParams, self::RESSOURCE_PARAMS);
+							throw new \RuntimeException("Transformer for ressource type {$ressourceType} and path type {$pathType} must be callable.");
+						if(!empty($pathParams))
+							$opt = $pathParams;
+						else
+							$opt = $path;
+						$ressourceParams = call_user_func(static::$transformers[$ressourceType][$pathType], $opt, self::RESSOURCE_PARAMS);
 					}
 					else
 						$ressourceParams = $pathParams;
