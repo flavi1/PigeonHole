@@ -1,9 +1,8 @@
 <?php
-include_once('../src/PigeonHole.php');
 namespace PigeonHole;
-
 use PHPUnit\Framework\TestCase;
 
+include_once('../src/PigeonHole.php');
 
 set_error_handler(function($errno, $errstr, $errfile, $errline) {
     // error was suppressed with the @-operator
