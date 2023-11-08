@@ -1,4 +1,5 @@
 <?php
+include_once('../src/PigeonHole.php')
 namespace PigeonHole;
 
 use PHPUnit\Framework\TestCase;
