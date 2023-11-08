@@ -28,7 +28,7 @@ Les cas d'usages sont multiples.
  - Écrire un autoload PSR-0 ou PSR-4.
  - Mettre en place votre propre framework PHP en utilisant les classes de votre choix et en gérant vous même la manière dont sont organisés vos fichiers. (approche modulaire, surcharges, caches, templates...)
 
-
+TODO : Finir cette doc, coding style psr2, décommenter before script travis
 
 ## Structure
 
