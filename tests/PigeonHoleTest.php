@@ -2,7 +2,7 @@
 namespace PigeonHole;
 use PHPUnit\Framework\TestCase;
 
-include_once('../src/PigeonHole.php');
+include_once(__DIR__.'/../src/PigeonHole.php');
 
 set_error_handler(function($errno, $errstr, $errfile, $errline) {
     // error was suppressed with the @-operator
