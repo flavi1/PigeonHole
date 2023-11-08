@@ -12,6 +12,24 @@
 This is where your description should go. Try and limit it to a paragraph or two, and maybe throw in a mention of what
 PSRs you support to avoid any confusion with users and contributors.
 
+Cette petite classe, inspirée par AltoRouter ne fait qu'une seule chose. Elle associe à une ressource (une autre classe, un fichier, une entrée dans une base de donnée...) à un ou plusieurs chemins (URL, chemin d'accès...) grâce à des patterns.
+Une ressource est définie par un ensemble de paramètres (c'est à vous de les définir ex : `[type => article, id => 3]`) et peut être liée à plusieurs types de chemins (ex: `url_view, url_edit, cache_file_path`...).
+
+On peut retrouver une ressource (ses paramètres) à l'aide d'un de ses chemins, on peut aussi générer le ou les chemins associé à une ressource.
+
+## Pourquoi faire ?
+
+Les cas d'usages sont multiples.
+
+ - Réaliser un router/générateur d'URL.
+ - Organiser des templates, leur éventuel surcharge par un thème, ainsi que leur fichier cache.
+ - Organiser un serveur d'images en utilisant les types de chemins comme des tailles.
+ - Convertir de vielles URLs et/ou gérer leur redirection.
+ - Écrire un autoload PSR-0 ou PSR-4.
+ - Mettre en place votre propre framework PHP en utilisant les classes de votre choix et en gérant vous même la manière dont sont organisés vos fichiers. (approche modulaire, surcharges, caches, templates...)
+
+
+
 ## Structure
 
 If any of the following are applicable to your project, then the directory structure should follow industry best practices by being named the following.
