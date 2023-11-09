@@ -34,7 +34,7 @@ Voyons comment utiliser cette bibliothèque à travers quelques exemples complet
 
 Voici un premier exemple relativement "complexe" pour se faire une idée des possibilités offertes par cette bibliothèque. Qui peut le plus peut le moins.
 
-Commençons par définir des chemins globaux root, theme, et www. Ce sont des préfixes qui vont nous permettre de rendre notre projet simple à migrer.
+Commençons par définir des chemins globaux 'root', 'theme', et 'www'. Ce sont des préfixes qui vont nous permettre de rendre notre projet simple à migrer.
 
     PigeonHole::setGlobalPath('root', '/var/www');
     PigeonHole::setGlobalPath('theme', ['/var/themes/extendable_theme', '/var/themes/child_theme']);
