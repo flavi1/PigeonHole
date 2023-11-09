@@ -45,9 +45,9 @@ Définissons maintenant des types de chemins pour les ressources de type "page"
     PigeonHole::map('page', 'cache_path', '%root%/cache/[a:name].php');
     PigeonHole::map('page', 'url', '%www%/[a:name]');
 
-Ces types de chemins utilise le paramètre alphanumérique "name" noté [a:name] dans les patterns ci dessus. (cf ci dessous les différents types de paramètres.)
+Ces types de chemins utilise le paramètre alphanumérique "name" noté [a:name] dans les patterns ci dessus. (cf tout en bas les différents types de paramètres.)
 
-Soit une page "home". C'est à dire une ressource de type "page" dont le paramètre alphanumérique est "home". On souhaite connaitre les différents chemins qui lui sont associés.
+Soit une page "home". C'est à dire une ressource de type "page" dont le paramètre alphanumérique "name" est "home". On souhaite connaitre les différents chemins qui lui sont associés.
 
     PigeonHole::generatePaths('page', ['name' => 'home'])
 
